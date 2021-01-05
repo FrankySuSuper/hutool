@@ -76,6 +76,12 @@ public class IdcardUtilTest {
 	}
 
 	@Test
+	public void getCityCodeByIdCardTest() {
+		String codeByIdCard = IdcardUtil.getCityCodeByIdCard(ID_18);
+		Assert.assertEquals("32108", codeByIdCard);
+	}
+
+	@Test
 	public void getGenderByIdCardTest() {
 		int gender = IdcardUtil.getGenderByIdCard(ID_18);
 		Assert.assertEquals(1, gender);
@@ -87,4 +93,10 @@ public class IdcardUtilTest {
 		Assert.assertFalse(isValidCard18);
 	}
 
+	@Test
+	public void isValidHKCardIdTest(){
+		String hkCard="P174468(6)";
+		boolean flag=IdcardUtil.isValidHKCard(hkCard);
+		Assert.assertTrue(flag);
+	}
 }

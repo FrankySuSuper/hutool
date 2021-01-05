@@ -332,6 +332,19 @@ public final class JSONUtil {
 	}
 
 	/**
+	 * 转为JSON字符串，并写出到write
+	 *
+	 * @param json JSON
+	 * @param writer Writer
+	 * @since 5.3.3
+	 */
+	public static void toJsonStr(JSON json, Writer writer) {
+		if (null != json) {
+			json.write(writer);
+		}
+	}
+
+	/**
 	 * 转为JSON字符串
 	 *
 	 * @param json JSON
@@ -354,10 +367,23 @@ public final class JSONUtil {
 		if (null == obj) {
 			return null;
 		}
-		if (obj instanceof String) {
-			return (String) obj;
+		if (obj instanceof CharSequence) {
+			return StrUtil.str((CharSequence) obj);
 		}
 		return toJsonStr(parse(obj));
+	}
+
+	/**
+	 * 转换为JSON字符串并写出到writer
+	 *
+	 * @param obj 被转为JSON的对象
+	 * @param writer Writer
+	 * @since 5.3.3
+	 */
+	public static void toJsonStr(Object obj, Writer writer) {
+		if (null != obj) {
+			toJsonStr(parse(obj), writer);
+		}
 	}
 
 	/**
@@ -469,10 +495,23 @@ public final class JSONUtil {
 	// -------------------------------------------------------------------- toBean end
 
 	/**
+	 * 将JSONArray字符串转换为Bean的List，默认为ArrayList
+	 *
+	 * @param <T>         Bean类型
+	 * @param jsonArray   JSONArray字符串
+	 * @param elementType List中元素类型
+	 * @return List
+	 * @since 5.5.2
+	 */
+	public static <T> List<T> toList(String jsonArray, Class<T> elementType) {
+		return toList(parseArray(jsonArray), elementType);
+	}
+
+	/**
 	 * 将JSONArray转换为Bean的List，默认为ArrayList
 	 *
 	 * @param <T>         Bean类型
-	 * @param jsonArray   JSONArray
+	 * @param jsonArray   {@link JSONArray}
 	 * @param elementType List中元素类型
 	 * @return List
 	 * @since 4.0.7
@@ -599,13 +638,13 @@ public final class JSONUtil {
 		}
 
 		char b; // 前一个字符
-		char c = 0; // 当前字符
+		char c; // 当前字符
 		int len = str.length();
 		if (isWrap) {
 			writer.write('"');
 		}
 		for (int i = 0; i < len; i++) {
-			b = c;
+//			b = c;
 			c = str.charAt(i);
 			switch (c) {
 				case '\\':
@@ -613,12 +652,13 @@ public final class JSONUtil {
 					writer.write("\\");
 					writer.write(c);
 					break;
-				case '/':
-					if (b == '<') {
-						writer.write('\\');
-					}
-					writer.write(c);
-					break;
+					//此处转义导致输出不和预期一致
+//				case '/':
+//					if (b == '<') {
+//						writer.write('\\');
+//					}
+//					writer.write(c);
+//					break;
 				default:
 					writer.write(escape(c));
 			}
@@ -654,12 +694,12 @@ public final class JSONUtil {
 	 * 在需要的时候包装对象<br>
 	 * 包装包括：
 	 * <ul>
-	 * <li><code>null</code> =》 <code>JSONNull.NULL</code></li>
+	 * <li>{@code null} =》 {@code JSONNull.NULL}</li>
 	 * <li>array or collection =》 JSONArray</li>
 	 * <li>map =》 JSONObject</li>
 	 * <li>standard property (Double, String, et al) =》 原对象</li>
 	 * <li>来自于java包 =》 字符串</li>
-	 * <li>其它 =》 尝试包装为JSONObject，否则返回<code>null</code></li>
+	 * <li>其它 =》 尝试包装为JSONObject，否则返回{@code null}</li>
 	 * </ul>
 	 *
 	 * @param object     被包装的对象
@@ -736,7 +776,7 @@ public final class JSONUtil {
 	 * @since 3.1.2
 	 */
 	public static String formatJsonStr(String jsonStr) {
-		return JSONStrFormater.format(jsonStr);
+		return JSONStrFormatter.format(jsonStr);
 	}
 
 	/**

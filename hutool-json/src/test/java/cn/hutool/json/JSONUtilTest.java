@@ -20,7 +20,7 @@ public class JSONUtilTest {
 	 * 出现语法错误时报错，检查解析\x字符时是否会导致死循环异常
 	 */
 	@Test(expected = JSONException.class)
-	public void parseTest(){
+	public void parseTest() {
 		JSONArray jsonArray = JSONUtil.parseArray("[{\"a\":\"a\\x]");
 		Console.log(jsonArray);
 	}
@@ -29,7 +29,7 @@ public class JSONUtilTest {
 	 * 数字解析为JSONArray报错
 	 */
 	@Test(expected = JSONException.class)
-	public void parseNumberTest(){
+	public void parseNumberTest() {
 		JSONArray json = JSONUtil.parseArray(123L);
 		Console.log(json);
 	}
@@ -38,7 +38,7 @@ public class JSONUtilTest {
 	 * 数字解析为JSONObject忽略
 	 */
 	@Test
-	public void parseNumberTest2(){
+	public void parseNumberTest2() {
 		JSONObject json = JSONUtil.parseObj(123L);
 		Assert.assertEquals(new JSONObject(), json);
 	}
@@ -93,11 +93,11 @@ public class JSONUtilTest {
 		map.put("user", object.toString());
 
 		JSONObject json = JSONUtil.parseObj(map);
-		Assert.assertEquals("{\"name\":\"123123\",\"value\":\"\\\\\",\"value2\":\"<\\/\"}", json.get("user"));
-		Assert.assertEquals("{\"user\":\"{\\\"name\\\":\\\"123123\\\",\\\"value\\\":\\\"\\\\\\\\\\\",\\\"value2\\\":\\\"<\\\\/\\\"}\"}", json.toString());
+		Assert.assertEquals("{\"name\":\"123123\",\"value\":\"\\\\\",\"value2\":\"</\"}", json.get("user"));
+		Assert.assertEquals("{\"user\":\"{\\\"name\\\":\\\"123123\\\",\\\"value\\\":\\\"\\\\\\\\\\\",\\\"value2\\\":\\\"</\\\"}\"}", json.toString());
 
 		JSONObject json2 = JSONUtil.parseObj(json.toString());
-		Assert.assertEquals("{\"name\":\"123123\",\"value\":\"\\\\\",\"value2\":\"<\\/\"}", json2.get("user"));
+		Assert.assertEquals("{\"name\":\"123123\",\"value\":\"\\\\\",\"value2\":\"</\"}", json2.get("user"));
 	}
 
 	/**
@@ -153,5 +153,21 @@ public class JSONUtilTest {
 		Assert.assertEquals("640102197312070614X", json.get("sfz"));
 		Assert.assertEquals("aa", json.get("name"));
 		Assert.assertEquals(1, json.get("gender"));
+	}
+
+	@Test
+	public void doubleTest() {
+		String json = "{\"test\": 12.00}";
+		final JSONObject jsonObject = JSONUtil.parseObj(json);
+		//noinspection BigDecimalMethodWithoutRoundingCalled
+		Assert.assertEquals("12.00", jsonObject.getBigDecimal("test").setScale(2).toString());
+	}
+
+	@Test
+	public void parseObjTest() {
+		// 测试转义
+		final JSONObject jsonObject = JSONUtil.parseObj("{\n" +
+				"    \"test\": \"\\\\地库地库\",\n" +
+				"}");
 	}
 }

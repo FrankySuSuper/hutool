@@ -11,9 +11,11 @@ import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
 import javax.activation.FileTypeMap;
+import javax.mail.Address;
 import javax.mail.Authenticator;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
+import javax.mail.SendFailedException;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.MimeBodyPart;
@@ -23,6 +25,7 @@ import javax.mail.util.ByteArrayDataSource;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.util.Date;
 
@@ -76,10 +79,15 @@ public class Mail {
 	private boolean useGlobalSession = false;
 
 	/**
+	 * debug输出位置，可以自定义debug日志
+	 */
+	private PrintStream debugOutput;
+
+	/**
 	 * 创建邮件客户端
 	 *
 	 * @param mailAccount 邮件帐号
-	 * @return {@link Mail}
+	 * @return Mail
 	 */
 	public static Mail create(MailAccount mailAccount) {
 		return new Mail(mailAccount);
@@ -88,7 +96,7 @@ public class Mail {
 	/**
 	 * 创建邮件客户端，使用全局邮件帐户
 	 *
-	 * @return {@link Mail}
+	 * @return Mail
 	 */
 	public static Mail create() {
 		return new Mail();
@@ -343,6 +351,18 @@ public class Mail {
 		this.useGlobalSession = isUseGlobalSession;
 		return this;
 	}
+
+	/**
+	 * 设置debug输出位置，可以自定义debug日志
+	 *
+	 * @param debugOutput debug输出位置
+	 * @return this
+	 * @since 5.5.6
+	 */
+	public Mail setDebugOutput(PrintStream debugOutput) {
+		this.debugOutput = debugOutput;
+		return this;
+	}
 	// --------------------------------------------------------------- Getters and Setters end
 
 	/**
@@ -355,6 +375,12 @@ public class Mail {
 		try {
 			return doSend();
 		} catch (MessagingException e) {
+			if(e instanceof SendFailedException){
+				// 当地址无效时，显示更加详细的无效地址信息
+				final Address[] invalidAddresses = ((SendFailedException) e).getInvalidAddresses();
+				final String msg = StrUtil.format("Invalid Addresses: {}", ArrayUtil.toString(invalidAddresses));
+				throw new MailException(msg, e);
+			}
 			throw new MailException(e);
 		}
 	}
@@ -445,8 +471,14 @@ public class Mail {
 			authenticator = new UserPassAuthenticator(mailAccount.getUser(), mailAccount.getPass());
 		}
 
-		return isSingleton ? Session.getDefaultInstance(mailAccount.getSmtpProps(), authenticator) //
+		final Session session = isSingleton ? Session.getDefaultInstance(mailAccount.getSmtpProps(), authenticator) //
 				: Session.getInstance(mailAccount.getSmtpProps(), authenticator);
+
+		if(null != this.debugOutput){
+			session.setDebugOut(debugOutput);
+		}
+
+		return session;
 	}
 	// --------------------------------------------------------------- Private method end
 }
